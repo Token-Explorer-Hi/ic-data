@@ -1,0 +1,17 @@
+{
+  "governance": {
+    "ic": "xzhe2-gqaaa-aaaae-qajqa-cai"
+  },
+  "index": {
+    "ic": "x6gco-liaaa-aaaae-qajqq-cai"
+  },
+  "root": {
+    "ic": "sf467-nyaaa-aaaae-qajpq-cai"
+  },
+  "storage": {
+    "ic": "xxfjs-5aaaa-aaaae-qajra-cai"
+  },
+  "transaction_data_adapter": {
+    "ic": "wpm4r-taaaa-aaaae-qajva-cai"
+  }
+}

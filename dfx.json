@@ -1,0 +1,31 @@
+{
+  "canisters": {
+    "root": {
+      "main": "src/root/DataRoot.mo",
+      "type": "motoko"
+    },
+    "governance": {
+      "main": "src/governance/DataGovernance.mo",
+      "type": "motoko"
+    },
+    "index": {
+      "main": "src/index/DataIndex.mo",
+      "type": "motoko"
+    },
+    "transaction_data_adapter": {
+      "main": "src/adapter/TransactionDataAdapter.mo",
+      "type": "motoko"
+    },
+    "storage": {
+      "main": "src/storage/Storage.mo",
+      "type": "motoko"
+    }
+  },
+  "defaults": { "build": { "packtool": "vessel sources" } },
+  "dfx": "0.20.0",
+  "networks": {
+    "local": { "bind": "127.0.0.1:8000", "type": "ephemeral" },
+    "ic_pro": { "providers": ["https://ic0.app"], "type": "persistent" }
+  },
+  "version": 1
+}

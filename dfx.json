@@ -15,10 +15,6 @@
     "transaction_data_adapter": {
       "main": "src/adapter/TransactionDataAdapter.mo",
       "type": "motoko"
-    },
-    "storage": {
-      "main": "src/storage/Storage.mo",
-      "type": "motoko"
     }
   },
   "defaults": { "build": { "packtool": "vessel sources" } },

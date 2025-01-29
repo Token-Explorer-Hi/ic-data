@@ -7,6 +7,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Order "mo:base/Order";
+import Timer "mo:base/Timer";
 
 import StableTrieMap "mo:StableTrieMap";
 
@@ -215,31 +216,34 @@ shared (initMsg) actor class DataGovernance({root_canister_id: Principal}) {
     func _create_storage_if_not_exist() : async () {
         let now = Time.now();
         let month = Utils.get_month(Int.abs(now)/1_000_000);
+        if(month <= 202501 or month >= 202512){
+            return;
+        };
         let _storageInfo = await _create_storage(month);
     };
 
-    public shared(msg) func init_storage():async Result.Result<Nat, Types.Error>{
-        if(not AccessUtils.is_admin(msg.caller,_admins)){
-            return #err(#NotAdmin);
-        };
-        var year = 2021;
-        var month = 5;
-        var count = 0;
-        while(year <= 2021 and month <= 12){
-            // while(year <= 2025 and month <= 1){
-            let monthStorage = year * 100 + month;
-            ignore await _create_storage(monthStorage);
-            month += 1;
-            if(month > 12){
-                month := 1;
-                year += 1;
-            };
-            count += 1;
-        };
-        return #ok(count);
-    };
+    // public shared(msg) func init_storage():async Result.Result<Nat, Types.Error>{
+    //     if(not AccessUtils.is_admin(msg.caller,_admins)){
+    //         return #err(#NotAdmin);
+    //     };
+    //     var year = 2022;
+    //     var month = 2;
+    //     var count = 0;
+    //     var monthStorage = 202202;
+    //     while(monthStorage <= 202501){
+    //         ignore await _create_storage(monthStorage);
+    //         month += 1;
+    //         if(month > 12){
+    //             month := 1;
+    //             year += 1;
+    //         };
+    //         monthStorage := year * 100 + month;
+    //         count += 1;
+    //     };
+    //     return #ok(count);
+    // };
 
-    // ignore Timer.recurringTimer<system>(#seconds(60 * 1), _create_storage_if_not_exist);
+    ignore Timer.recurringTimer<system>(#seconds(60 * 10), _create_storage_if_not_exist);
 
     private func _validate_month(month: Nat) : Bool {
         let year = month / 100;

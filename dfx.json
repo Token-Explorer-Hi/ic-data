@@ -18,7 +18,7 @@
     }
   },
   "defaults": { "build": { "packtool": "vessel sources" } },
-  "dfx": "0.20.0",
+  "dfx": "0.22.0",
   "networks": {
     "local": { "bind": "127.0.0.1:8000", "type": "ephemeral" },
     "ic_pro": { "providers": ["https://ic0.app"], "type": "persistent" }

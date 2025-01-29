@@ -9,7 +9,6 @@ import Bool "mo:base/Bool";
 import Error "mo:base/Error";
 
 import Types "../DataTypes";
-import Utils "../common/Utils";
 
 actor class TransactionDataAdapter({governance_id: Principal;provider_id: Principal}) {
 
@@ -55,6 +54,7 @@ actor class TransactionDataAdapter({governance_id: Principal;provider_id: Princi
     };
 
     public type TransactionDataArg = {
+        month : Nat;
         txs : [TransactionData];
     };
 
@@ -67,17 +67,14 @@ actor class TransactionDataAdapter({governance_id: Principal;provider_id: Princi
         };
     };
 
-    public composite query(msg) func get_storage_canister_id(month: Nat) : async Result.Result<Principal, Types.Error> {
-        if(msg.caller != provider_id){
-            return #err(#NotProvider);
-        };
+    public shared func get_storage_canister_id(month: Nat) : async Result.Result<Principal, Types.Error> {
         return await governance.get_storage_canister_id(month);
     };
 
     private var message1 = "";
     private var message2 = "";
 
-    public query func get_messages() : async {message1: Text;message2: Text;} {
+    public query func get_messages() : async {message1: Text;message2: Text} {
         return {
             message1 = message1;
             message2 = message2;
@@ -94,13 +91,10 @@ actor class TransactionDataAdapter({governance_id: Principal;provider_id: Princi
         if(txsArg.txs.size() > 2000){
             return #err(#InternalError("Too many transaction data"));
         };
-        var month = 0;
+        var month = txsArg.month;
         let buffer = Buffer.Buffer<Types.BlockArg>(txsArg.txs.size());
         try{
             for(tx in txsArg.txs.vals()){
-                if(month == 0){
-                    month := Utils.get_month(tx.token0_tx_time);
-                };
                 let block = tx_to_block(tx);
                 buffer.add(block);
             };
@@ -112,20 +106,23 @@ actor class TransactionDataAdapter({governance_id: Principal;provider_id: Princi
                 let storageResult = await governance.get_storage_canister_id(month);
                 switch(storageResult){
                     case(#ok(storageCanisterId)){
-                        let storageCanister = actor(Principal.toText(storageCanisterId)) : Types.StorageInterface;
-                        let result = await storageCanister.append_blocks(Buffer.toArray(buffer));
-                        return result;
+                        try{
+                            let storageCanister = actor(Principal.toText(storageCanisterId)) : Types.StorageInterface;
+                            let result = await storageCanister.append_blocks(Buffer.toArray(buffer));
+                            return result;
+                        }catch(e){
+                            message2 := "Error3: " # Error.message(e);
+                        };
                     };
                     case(#err(err)){
                         return #err(err);
                     };
                 };
             };
-            message2 := "Buffer size: " # debug_show(buffer.size());
-        }catch(e){
+        }catch(e){  
             message2 := "Error2: " # Error.message(e);
         };
-        return #ok(true);
+        return #ok(false);
     };
 
 

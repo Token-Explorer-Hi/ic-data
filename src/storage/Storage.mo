@@ -62,6 +62,10 @@ shared (initMsg) actor class Storage(storageId : Nat) : async Types.StorageInter
         return #ok(true);
     };
 
+    public query func get_accept_status(data_source_identity: Principal) : async Result.Result<Bool, Types.Error> {
+        return #ok(_check_accept_status(data_source_identity));
+    };
+
     public shared ({ caller }) func append_blocks(blockArgs : [Types.BlockArg]) : async Result.Result<Bool, Types.Error> {
         if (not _check_accept_status(caller)) {
             return #err(#InternalError("Unauthorized Access: Can not access this storage canister"));

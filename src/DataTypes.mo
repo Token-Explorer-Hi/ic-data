@@ -131,6 +131,12 @@ module {
         canister_id : Principal;
         name : Text;
     };
+    
+    public type IndexDetails = {
+        canister_id : Principal;
+        name : Text;
+        value : Value;
+    };
 
     public type IndexStatusInfo = {
         canister_id : Principal;
@@ -153,8 +159,13 @@ module {
         update_accept_status : shared (Principal, Bool) -> async Result.Result<Bool, Error>;
     };
 
+    public type IndexInterface = actor {
+        get_index_details : query () -> async Result.Result<IndexDetails, Error>;
+    };
+
     public type GovernanceInterface = actor {
         get_storage_canister_id : query (month: Nat) -> async Result.Result<Principal, Error>; 
+        get_all_storage : query () -> async Result.Result<[(Nat, StorageInfo)], Error>;
     };
 
     public type RootInterface = actor {

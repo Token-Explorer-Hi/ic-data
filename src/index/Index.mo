@@ -1,4 +1,0 @@
-
-actor class Index() {
-    // todo
-}

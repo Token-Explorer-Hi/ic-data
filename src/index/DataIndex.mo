@@ -29,10 +29,8 @@ shared (initMsg) actor class DataIndex({root_canister_id: Principal}) = this {
         return #ok(_admins);
     };
 
-    public shared (msg) func register_index(canister_id: Principal,name: Text) : async Result.Result<Bool, Types.Error> {
-        if(not AccessUtils.is_admin(msg.caller, _admins)){
-            return #err(#NotAdmin);
-        };
+    public shared (msg) func register_index(name: Text) : async Result.Result<Bool, Types.Error> {
+        let canister_id = msg.caller;
         let is_controller = await IC0Utils.is_controller(canister_id, Principal.fromActor(this));
         if(not is_controller){
             return #err(#NotController);

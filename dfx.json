@@ -12,6 +12,10 @@
       "main": "src/index/DataIndex.mo",
       "type": "motoko"
     },
+    "tx_pid_index":{
+      "main": "src/index/PrincipalTxIndex.mo",
+      "type": "motoko"
+    },
     "transaction_data_adapter": {
       "main": "src/adapter/TransactionDataAdapter.mo",
       "type": "motoko"

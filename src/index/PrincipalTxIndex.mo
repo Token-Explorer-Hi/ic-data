@@ -8,11 +8,12 @@ import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Timer "mo:base/Timer";
 import Error "mo:base/Error";
+import Bool "mo:base/Bool";
 import Utils "../common/Utils";
+import IC0Utils "../common/IC0Utils";
+import AccessUtils "../common/AccessUtils";
 
-shared (initMsg) actor class Index({name: Text; governance_canister_id: Principal}) : async Types.IndexInterface = this {
-
-    private stable var _index_details : Types.IndexDetails = {canister_id = Principal.fromActor(this); name = name; value = #Map([])};
+shared (initMsg) actor class Index({name: Text; governance_canister_id: Principal; index_canister_id: Principal}) = this {
 
     // key is the index name, value is the list of block numbers
     private stable var _index = StableTrieMap.new<Text, [Nat]>();
@@ -27,12 +28,22 @@ shared (initMsg) actor class Index({name: Text; governance_canister_id: Principa
     private var _sync_lock : Bool = false;
     private var _timer_lock : Bool = false;
 
+    public shared (msg) func register() : async Result.Result<Bool, Types.Error> {
+        if(not AccessUtils.is_controller(msg.caller)){
+            return #err(#NotController);
+        };
+        let _add_index_controller_result = await IC0Utils.update_settings_add_controller(Principal.fromActor(this), index_canister_id);
+        let index = actor(Principal.toText(index_canister_id)) : Types.IndexInterface;
+        return await index.register_index(name);
+    };
+
+
     public query func get_lock_state() : async {sync_lock: Bool; timer_lock: Bool} {
         return {sync_lock = _sync_lock; timer_lock = _timer_lock};
     };
 
     public shared(msg) func set_timer_lock(lock: Bool) : async Result.Result<Bool, Types.Error> {
-        if(msg.caller != Principal.fromActor(this)){
+        if(not AccessUtils.is_controller(msg.caller)){
             return #err(#NotController);
         };
         _timer_lock := lock;
@@ -41,23 +52,11 @@ shared (initMsg) actor class Index({name: Text; governance_canister_id: Principa
 
 
     public query func get_index_details() : async Result.Result<Types.IndexDetails, Types.Error> {
-        return #ok(_index_details);
-    };
-
-    public shared(msg) func update_index_details(details: Types.IndexDetails) : async Result.Result<Bool, Types.Error> {
-        if(msg.caller != Principal.fromActor(this)){
-            return #err(#NotController);
-        };
-        _index_details := {
-            canister_id = Principal.fromActor(this);
-            name = details.name;
-            value = details.value;
-        };
-        return #ok(true);
+        return #ok({canister_id = Principal.fromActor(this); name = name; value = #Map([])});
     };
 
     public shared(msg) func build_index() : async Result.Result<Bool, Types.Error> {
-        if(msg.caller != Principal.fromActor(this)){
+        if(not AccessUtils.is_controller(msg.caller)){
             return #err(#NotController);
         };
         return await _sync_index();
@@ -104,7 +103,7 @@ shared (initMsg) actor class Index({name: Text; governance_canister_id: Principa
                     return #ok([]);
                 };
                 for(index in index_buffer.vals()){
-                    let block = await _get_block(index);
+                    let block = await get_block(index);
                     switch(block){
                         case(null){};
                         case(?block){
@@ -117,7 +116,7 @@ shared (initMsg) actor class Index({name: Text; governance_canister_id: Principa
         };
     };
 
-    private composite query func _get_block(block_index: Nat) : async ?Types.Block {
+    public composite query func get_block(block_index: Nat) : async ?Types.Block {
         let month = block_index / 10_000_000;
         let storage_info = StableTrieMap.get(_storage_map, Nat.equal, Utils.hash, month);
         switch(storage_info){
@@ -180,9 +179,8 @@ shared (initMsg) actor class Index({name: Text; governance_canister_id: Principa
             };
         }catch (e){
             return #err(#InternalError("Failed to sync index, error: " # debug_show(Error.message(e))));
-        }finally{
-            _sync_lock := false;
         };
+        _sync_lock := false;
         return #ok(true);
     };
 
@@ -303,6 +301,6 @@ shared (initMsg) actor class Index({name: Text; governance_canister_id: Principa
         };
     };
 
-    ignore Timer.recurringTimer<system>(#seconds(60), _sync_index_timer);
+    ignore Timer.recurringTimer<system>(#seconds(3*60), _sync_index_timer);
     
 }

@@ -160,7 +160,7 @@ module {
     };
 
     public type IndexInterface = actor {
-        get_index_details : query () -> async Result.Result<IndexDetails, Error>;
+        register_index : shared (Text) -> async Result.Result<Bool, Error>;
     };
 
     public type GovernanceInterface = actor {

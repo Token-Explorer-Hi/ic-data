@@ -8,7 +8,13 @@
   "root": {
     "ic": "sf467-nyaaa-aaaae-qajpq-cai"
   },
+  "storage": {
+    "ic": "uvqun-nqaaa-aaaae-qaj2a-cai"
+  },
   "transaction_data_adapter": {
     "ic": "wpm4r-taaaa-aaaae-qajva-cai"
+  },
+  "tx_pid_index": {
+    "ic": "he6bm-xiaaa-aaaae-qclea-cai"
   }
 }

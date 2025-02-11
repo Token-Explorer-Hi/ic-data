@@ -9,6 +9,7 @@ import Nat "mo:base/Nat";
 import Timer "mo:base/Timer";
 import Error "mo:base/Error";
 import Bool "mo:base/Bool";
+import Iter "mo:base/Iter";
 import Utils "../common/Utils";
 import IC0Utils "../common/IC0Utils";
 import AccessUtils "../common/AccessUtils";
@@ -62,7 +63,14 @@ shared (initMsg) actor class Index({name: Text; governance_canister_id: Principa
         return await _sync_index();
     };
 
+    public query func get_storage_list() : async Result.Result<[(Principal, Nat)], Types.Error> {
+        return #ok(Iter.toArray(StableTrieMap.entries(_storage_index)));
+    };
+
     public query func get_principal_block_indexes(principal: Principal,block_request: Types.BlockRequest) : async Result.Result<[Nat], Types.Error> {
+        if(block_request.length == 0 or block_request.length > 1000){
+            return #err(#InvalidRequest);
+        };
         let index_list = StableTrieMap.get(_index, Text.equal, Text.hash, Principal.toText(principal));
         let block_index_buffer = Buffer.Buffer<Nat>(0);
         switch(index_list){
@@ -85,6 +93,9 @@ shared (initMsg) actor class Index({name: Text; governance_canister_id: Principa
     };
 
     public composite query func get_principal_blocks(principal: Principal,block_request: Types.BlockRequest) : async Result.Result<[Types.Block], Types.Error> {
+        if(block_request.length == 0 or block_request.length > 1000){
+            return #err(#InvalidRequest);
+        };
         let index_list = StableTrieMap.get(_index, Text.equal, Text.hash, Principal.toText(principal));
         let block_buffer = Buffer.Buffer<Types.Block>(0);
         switch(index_list){

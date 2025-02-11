@@ -55,6 +55,7 @@ module {
         #DataSourceNotFound;
         #BlockNotFound;
         #IndexNotFound;
+        #InvalidRequest;
     };
 
     public type BlockArg = {

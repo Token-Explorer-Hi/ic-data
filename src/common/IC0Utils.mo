@@ -9,10 +9,17 @@ import Types "../DataTypes";
 
 module {
 
-    type canister_id = Principal;
+    public type CanisterId = {
+        canister_id: Principal;
+    };
     type user_id = Principal;
     type wasm_module = Blob;
     type canister_settings = { controllers : [Principal] };
+
+    public type ICActor = actor {
+        canister_status: query (canister_id: CanisterId) -> async Types.CanisterStatusResult;
+        deposit_cycles : shared (canister_id : CanisterId) -> ();
+    };
 
     let ic00 = actor "aaaaa-aa" : actor {
         create_canister : shared (settings : Types.CreateCanisterParams) -> async {
@@ -20,8 +27,8 @@ module {
         };
         stop_canister : Principal -> async ();
         delete_canister : Principal -> async ();
-        canister_status : { canister_id : Principal } -> async Types.CanisterStatusResult;
-        deposit_cycles : Principal -> async ();
+        canister_status: query (canister_id: CanisterId) -> async Types.CanisterStatusResult;
+        deposit_cycles : shared (canister_id : CanisterId) -> ();
         update_settings : {
             canister_id : Principal;
             settings : canister_settings;

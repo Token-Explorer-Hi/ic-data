@@ -4,15 +4,18 @@ import Principal "mo:base/Principal";
 import Nat "mo:base/Nat";
 import Text "mo:base/Text";
 import Buffer "mo:base/Buffer";
+import Cycles "mo:base/ExperimentalCycles";
+import Bool "mo:base/Bool";
 
 import Types "../DataTypes";
 import Utils "../common/Utils";
 import IC0Utils "../common/IC0Utils";
 import AccessUtils "../common/AccessUtils";
-actor class DataRoot() {
+actor class DataRoot() = this {
 
     private stable var _governance_canister_id : Principal = Principal.fromText("aaaaa-aa");
     private stable var _index_canister_id : Principal = Principal.fromText("aaaaa-aa");
+    private let _ic : IC0Utils.ICActor = actor ("aaaaa-aa");
 
     private stable var _storage_canister_map = StableTrieMap.new<Nat, Types.StorageInfo>();
 
@@ -31,6 +34,21 @@ actor class DataRoot() {
             return #err(#NotController);
         };
         _index_canister_id := canister_id;
+        return #ok(true);
+    };
+
+    public shared(msg) func topup(canister_id: Principal, amount: Nat) : async Result.Result<Bool, Types.Error> {
+        if(not AccessUtils.is_controller(msg.caller)){
+            return #err(#NotController);
+        };
+        if(not (await IC0Utils.is_controller(canister_id,Principal.fromActor(this)))){
+            return #err(#NotController);
+        };
+        if(amount > 100*1_000_000_000_000){
+            return #err(#InvalidRequest);
+        };
+        Cycles.add<system>(amount);
+        _ic.deposit_cycles({ canister_id = canister_id });
         return #ok(true);
     };
 

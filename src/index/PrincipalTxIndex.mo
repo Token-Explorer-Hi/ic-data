@@ -10,6 +10,7 @@ import Timer "mo:base/Timer";
 import Error "mo:base/Error";
 import Bool "mo:base/Bool";
 import Iter "mo:base/Iter";
+import Order "mo:base/Order";
 import Utils "../common/Utils";
 import IC0Utils "../common/IC0Utils";
 import AccessUtils "../common/AccessUtils";
@@ -78,8 +79,11 @@ shared (initMsg) actor class Index({name: Text; governance_canister_id: Principa
                 return #ok([]);
             };
             case(?index_list){
+                let sorted_index_list = Utils.sort(index_list, func(a: Nat, b: Nat) : Order.Order {
+                    Nat.compare(a, b)
+                });
                 var start = block_request.start;
-                for(index in index_list.vals()){
+                for(index in sorted_index_list.vals()){
                     if(index >= start and block_index_buffer.size() < block_request.length){
                         block_index_buffer.add(index);
                     };
@@ -103,9 +107,12 @@ shared (initMsg) actor class Index({name: Text; governance_canister_id: Principa
                 return #ok([]);
             };
             case(?index_list){
+                let sorted_index_list = Utils.sort(index_list, func(a: Nat, b: Nat) : Order.Order {
+                    Nat.compare(a, b)
+                });
                 var start = block_request.start;
                 let index_buffer = Buffer.Buffer<Nat>(0);
-                for(index in index_list.vals()){
+                for(index in sorted_index_list.vals()){
                     if(index >= start and index_buffer.size() < block_request.length){
                         index_buffer.add(index);
                     };

@@ -16,35 +16,50 @@ actor class DataRoot() = this {
     private stable var _governance_canister_id : Principal = Principal.fromText("aaaaa-aa");
     private stable var _index_canister_id : Principal = Principal.fromText("aaaaa-aa");
     private let _ic : IC0Utils.ICActor = actor ("aaaaa-aa");
+    private let MIN_TOPUP_AMOUNT = 500_000_000_000;//0.5T
 
     private stable var _storage_canister_map = StableTrieMap.new<Nat, Types.StorageInfo>();
 
     private stable var _index_canister_map = StableTrieMap.new<Text, Types.IndexInfo>();
 
-    public shared(msg) func set_governance_canister(canister_id: Principal) : async Result.Result<Bool, Types.Error> {
+    private stable var _admins : [Principal] = [];
+
+    public shared (msg) func set_admins(admins : [Principal]) : async Result.Result<Bool, Types.Error> {
         if(not AccessUtils.is_controller(msg.caller)){
             return #err(#NotController);
+        };
+        _admins := admins;
+        return #ok(true);
+    };
+
+    public query func get_admins() : async Result.Result<[Principal], Text> {
+        return #ok(_admins);
+    };
+
+    public shared(msg) func set_governance_canister(canister_id: Principal) : async Result.Result<Bool, Types.Error> {
+       if(not AccessUtils.is_admin(msg.caller, _admins)){
+            return #err(#NotAdmin);
         };
         _governance_canister_id := canister_id;
         return #ok(true);
     };
 
     public shared(msg) func set_index_canister(canister_id: Principal) : async Result.Result<Bool, Types.Error> {
-        if(not AccessUtils.is_controller(msg.caller)){
-            return #err(#NotController);
+        if(not AccessUtils.is_admin(msg.caller, _admins)){
+            return #err(#NotAdmin);
         };
         _index_canister_id := canister_id;
         return #ok(true);
     };
 
     public shared(msg) func topup(canister_id: Principal, amount: Nat) : async Result.Result<Bool, Types.Error> {
-        if(not AccessUtils.is_controller(msg.caller)){
-            return #err(#NotController);
+        if(not AccessUtils.is_admin(msg.caller, _admins)){
+            return #err(#NotAdmin);
         };
         if(not (await IC0Utils.is_controller(canister_id,Principal.fromActor(this)))){
             return #err(#NotController);
         };
-        if(amount > 100*1_000_000_000_000){
+        if(amount > 100*1_000_000_000_000 or amount < MIN_TOPUP_AMOUNT){
             return #err(#InvalidRequest);
         };
         Cycles.add<system>(amount);

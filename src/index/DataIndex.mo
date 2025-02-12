@@ -71,6 +71,10 @@ shared (initMsg) actor class DataIndex({root_canister_id: Principal}) = this {
         if(not AccessUtils.is_admin(msg.caller, _admins)){
             return #err(#NotAdmin);
         };
+        let is_controller = await IC0Utils.is_controller(canister_id, Principal.fromActor(this));
+        if(not is_controller){
+            return #err(#NotController);
+        };
         let _ = await IC0Utils.update_settings_add_controller(canister_id, controller);
         return #ok(true);
     };
@@ -78,6 +82,10 @@ shared (initMsg) actor class DataIndex({root_canister_id: Principal}) = this {
     public shared (msg) func remove_index_controller(canister_id: Principal,controller: Principal) : async Result.Result<Bool, Types.Error> {
         if(not AccessUtils.is_admin(msg.caller, _admins)){
             return #err(#NotAdmin);
+        };
+        let is_controller = await IC0Utils.is_controller(canister_id, Principal.fromActor(this));
+        if(not is_controller){
+            return #err(#NotController);
         };
         let _ = await IC0Utils.update_settings_remove_controller(canister_id, controller);
         return #ok(true);

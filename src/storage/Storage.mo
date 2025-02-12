@@ -70,6 +70,7 @@ shared (initMsg) actor class Storage(storageId : Nat) : async Types.StorageInter
         if (not _check_accept_status(caller)) {
             return #err(#InternalError("Unauthorized Access: Can not access this storage canister"));
         };
+        if(blockArgs.size() == 0) return #ok(true);
         let buffer = Buffer.Buffer<Types.Block>(blockArgs.size());
         for(blockArg in blockArgs.vals()){
             let block = {blockArg with 

@@ -25,6 +25,7 @@ actor class DataRoot() = this {
     private let MIN_CYCLES = 2_000_000_000_000;//2T
     private let MIN_ROOT_CYCLES = 100_000_000_000_000;//100T
     private let MAX_ROOT_CYCLES = 200_000_000_000_000_000;//200T
+    private let ROOT_CANISTER_ID = Principal.fromText("sf467-nyaaa-aaaae-qajpq-cai");
 
     private stable var _storage_canister_map = StableTrieMap.new<Nat, Types.StorageInfo>();
 
@@ -224,10 +225,10 @@ actor class DataRoot() = this {
     };
 
     private func _monitor_root_cycle() : async () {
-        let status = await IC0Utils.canister_status(_governance_canister_id);
-        if(status.cycles < MIN_ROOT_CYCLES) {
-            let amount = Nat.sub(MAX_ROOT_CYCLES, status.cycles);
-            let result = await CycleMintHelper.mint_cycle(Principal.fromActor(this), amount);
+        let balance = Cycles.balance();
+        if(balance < MIN_ROOT_CYCLES) {
+            let amount = Nat.sub(MAX_ROOT_CYCLES, balance);
+            let result = await CycleMintHelper.mint_cycle(ROOT_CANISTER_ID, amount);
             switch (result) {
                 case (#Ok(_)) {};
                 case (#Err(_)) {};
